@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Login</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+      .login-wrap{max-width:420px;margin:60px auto;padding:24px;background:#fff;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+      .login-wrap h2{margin:0 0 12px}
+      .field{margin-bottom:12px}
+      input[type=text],input[type=password]{width:100%;padding:10px;border:1px solid #ddd;border-radius:6px}
+      .muted{color:#666}
+      .error{color:#b00020;margin-top:8px}
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <main style="padding:20px;">
+        <div class="login-wrap">
+          <h2>Admin Login</h2>
+          <div class="muted">Enter admin credentials to manage the hotel.</div>
+          <div class="field">
+            <label>Email</label>
+            <input id="email" type="text" value="" placeholder="admin@example.com" />
+          </div>
+          <div class="field">
+            <label>Password</label>
+            <input id="password" type="password" value="" placeholder="password" />
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:12px">
+            <button id="loginBtn" class="btn">Login</button>
+            <button id="createBtn" class="btn" style="background:#eee;color:#111">Create admin (dev)</button>
+            <a href="index.html" class="muted">Back to Dashboard</a>
+          </div>
+          <div id="error" class="error" role="alert" aria-live="polite"></div>
+        </div>
+      </main>
+    </div>
+    <script>
+      (function(){
+        const API_BASE = window.ADMIN_API_BASE || 'http://localhost:4000';
+        const tokenKey = 'admin_token';
+        const $ = (s)=>document.querySelector(s);
+        const saveToken = (t)=> localStorage.setItem(tokenKey,t);
+
+        async function doLogin(email,password){
+          $('#error').textContent = '';
+          try{
+            const res = await fetch(API_BASE + '/admin/auth/login', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ email, password }) });
+            const data = await res.json();
+            if(!res.ok){ $('#error').textContent = (data && (data.error||data.message)) ? (data.error||data.message) : ('Login failed: '+res.status); return null; }
+            if(data && data.token){ saveToken(data.token); return data.token; }
+            $('#error').textContent = 'Login did not return a token'; return null;
+          }catch(err){ $('#error').textContent = 'Request failed: '+err.message; return null }
+        }
+
+        $('#loginBtn').addEventListener('click', async ()=>{
+          const email = $('#email').value.trim();
+          const password = $('#password').value;
+          if(!email || !password){ $('#error').textContent = 'Email and password are required'; return; }
+          const token = await doLogin(email,password);
+          if(token) window.location.href = 'index.html';
+        });
+
+        // Dev: create admin via API if server allows it
+        $('#createBtn').addEventListener('click', async ()=>{
+          $('#error').textContent = '';
+          const email = $('#email').value.trim();
+          const password = $('#password').value;
+          if(!email || !password){ $('#error').textContent = 'Email and password are required to create admin'; return; }
+          try{
+            const res = await fetch(API_BASE + '/admin/auth/seed', { method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ email, password, name: 'Dev Admin' }) });
+            const data = await res.json();
+            if(!res.ok){ $('#error').textContent = (data && (data.error||data.message)) ? (data.error||data.message) : ('Seed failed: '+res.status); return; }
+            $('#error').textContent = 'Admin created. Logging in...';
+            const token = await doLogin(email,password);
+            if(token) window.location.href = 'index.html';
+          }catch(err){ $('#error').textContent = 'Seed request failed: '+err.message }
+        });
+
+        // pre-fill demo creds
+        $('#email').value = 'loki@gmail.com';
+        $('#password').value = '123456';
+      })();
+    </script>
+  </body>
+</html>

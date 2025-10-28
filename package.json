@@ -1,0 +1,26 @@
+{
+  "name": "hotel-management-system",
+  "version": "1.0.0",
+  "description": "Simple Hotel Management System - Node/Express backend + Static frontend (Vanilla JS). Connect to local MongoDB at mongodb://localhost:27017/hotelmgmt",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "concurrently \"npm run user\" \"npm run admin\"",
+    "user": "nodemon server-user/server.js",
+    "admin": "nodemon server-admin/server.js"
+    ,"seed-admin": "node server-admin/scripts/seed-admin.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.0",
+    "mongoose": "^7.5.0"
+    ,"multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10",
+    "concurrently": "^8.2.0"
+  }
+}

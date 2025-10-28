@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">HOTEL<br/><span>ADMIN</span></div>
+        <nav>
+          <a class="active">Dashboard</a>
+          <a href="#rooms">Rooms Manage.</a>
+          <!-- Guest Manage removed as requested -->
+          <a href="#bookings">Bookings</a>
+          <a href="#reviews">Reviews</a>
+          <a href="#settings">Settings</a>
+        </nav>
+        <div class="sidebar-footer">v1.0</div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <h1>Dashboard</h1>
+            <div class="muted">Welcome back, Admin</div>
+          </div>
+          <div class="top-actions">
+            <a href="login.html"><button id="goLoginBtn" class="btn">Login</button></a>
+          </div>
+        </header>
+
+        <section class="stats" id="stats">
+          <!-- cards rendered by JS -->
+        </section>
+
+        <section class="grid">
+          <div class="col main-col">
+            <div class="panel">
+              <div class="panel-title">Quick actions</div>
+              <div class="panel-body">
+                <button id="refreshBtn" class="btn refresh">Refresh</button>
+                <button id="newRoomBtn" class="btn add-room">+ Add Room</button>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-title">Summary</div>
+              <div id="summary" class="panel-body">Loading...</div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+  </html>
+ 

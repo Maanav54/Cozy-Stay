@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Dashboard (archived)</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">HOTEL<br><span>BOOKER'S</span></div>
+      <nav>
+        <a class="active">Home</a>
+        <a id="navRooms">Rooms</a>
+        <a id="navBookings">Bookings</a>
+        <a id="navUsers">Users</a>
+        <a id="navSettings">Settings</a>
+      </nav>
+      <div class="sidebar-footer">v1.0 (archived)</div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="left">
+          <h1>Overview</h1>
+          <div class="subtitle">Whole data about Business</div>
+        </div>
+        <div class="right">
+          <input id="tokenInput" placeholder="Paste admin token (JWT)" />
+          <button id="saveToken">Save</button>
+          <button id="clearToken">Clear</button>
+        </div>
+      </header>
+
+      <section class="cards" id="overviewCards">
+        <!-- cards populated by JS -->
+      </section>
+
+      <section class="content-grid">
+        <div class="left-col">
+          <div class="panel" id="roomsPanel">
+            <div class="panel-header"><h3>Rooms</h3><div class="panel-actions"><button id="refreshRooms">Refresh</button><button id="newRoomBtn">+ New</button></div></div>
+            <div id="roomsContainer" class="panel-body">Loading rooms...</div>
+          </div>
+
+          <div class="panel" id="bookingsPanel">
+            <div class="panel-header"><h3>Bookings</h3><div class="panel-actions"><button id="refreshBookings">Refresh</button></div></div>
+            <div id="bookingsContainer" class="panel-body">Loading bookings...</div>
+          </div>
+        </div>
+
+        <aside class="right-col">
+          <div class="card small" id="satisfaction">
+            <div class="card-title">Customer Satisfaction</div>
+            <div class="circle">4.5</div>
+            <button id="reviewsBtn">Customers Review</button>
+          </div>
+
+          <div class="panel" id="usersPanel">
+            <div class="panel-header"><h3>Users</h3><div class="panel-actions"><button id="refreshUsers">Refresh</button></div></div>
+            <div id="usersContainer" class="panel-body">Loading users...</div>
+          </div>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+/* Archived admin dashboard styles */
+:root{--blue:#1464f4;--accent:#0b63d8;--bg:#eef4ff;--muted:#7a7f88}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Segoe UI,Arial;background:linear-gradient(180deg,#eaf2ff 0,#f7f9fb 100%)}
+.app{display:flex;min-height:100vh}
+.sidebar{width:220px;background:var(--blue);color:white;padding:20px 16px;display:flex;flex-direction:column;justify-content:space-between}
+/* (styles archived) */
