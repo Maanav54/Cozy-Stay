@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const path = require('path');
 
 // Load config from env or use default matching server-admin/server.js
