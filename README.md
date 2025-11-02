@@ -32,5 +32,3 @@ This project is a simple Hotel Management System:
 - MongoDB URI can be set via `MONGO_URI` env var.
 - This is a demo-grade app: for production, add input validation, better error handling, admin roles, etc.
 
-# sunrise
-# sunrise
