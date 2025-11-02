@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "concurrently \"npm run user\" \"npm run admin\"",
+    "build": "npm rebuild bcrypt --build-from-source && npm install",
     "user": "nodemon server.js",
     "admin": "nodemon server-admin/server.js"
     ,"seed-admin": "node server-admin/scripts/seed-admin.js"
