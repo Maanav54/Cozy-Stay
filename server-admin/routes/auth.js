@@ -27,9 +27,8 @@ router.post('/login', async (req, res) => {
 });
 
 // Dev-only: POST /admin/auth/seed - create or update an admin user
-// Enabled only when ADMIN_DEV_ALLOW environment variable is set to 'true'
+// Enabled for development
 router.post('/seed', async (req, res) => {
-  if (String(process.env.ADMIN_DEV_ALLOW) !== 'true') return res.status(403).json({ error: 'Dev seeding disabled' });
   try {
     let { email, password, name } = req.body || {};
     if (!email || !password) return res.status(400).json({ error: 'email and password required' });

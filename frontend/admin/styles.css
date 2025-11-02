@@ -1,7 +1,7 @@
-/* Admin dashboard styles inspired by screenshot */
-:root{--blue:#1f3b6f;--accent:#2b7be4;--muted:#7a7f88;--card:#ffffff}
+/* Admin dashboard dark theme styles */
+:root{--blue:#1a1a2e;--accent:#16213e;--muted:#a0a0a0;--card:#16213e;--bg:#0f0f23;--text:#ffffff;--border:#2a2a4e}
 *{box-sizing:border-box}
-body{margin:0;font-family:Segoe UI,Helvetica,Arial;background:#f3f6fb;color:#222}
+body{margin:0;font-family:Segoe UI,Helvetica,Arial;background:var(--bg);color:var(--text)}
 .app{display:flex;min-height:100vh}
 .sidebar{width:220px;background:var(--blue);color:white;padding:24px 16px;display:flex;flex-direction:column;justify-content:space-between}
 .brand{font-weight:700;font-size:18px;line-height:1.05}
@@ -16,12 +16,12 @@ body{margin:0;font-family:Segoe UI,Helvetica,Arial;background:#f3f6fb;color:#222
 .topbar h1{margin:0;font-size:22px}
 .muted{color:var(--muted)}
 .top-actions{display:flex;gap:8px;align-items:center}
-.top-actions input{padding:8px;border-radius:6px;border:1px solid #ddd;width:360px}
+.top-actions input{padding:8px;border-radius:6px;border:1px solid var(--border);width:360px;background:var(--card);color:var(--text)}
 .top-actions button{padding:8px 10px;border-radius:6px;border:none;background:var(--accent);color:white;cursor:pointer}
 
 .stats{display:flex;gap:12px;margin-top:16px;margin-bottom:20px}
-.card{background:var(--card);padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(10,20,40,0.06);flex:1;display:flex;align-items:center;gap:12px}
-.card .num{font-size:20px;font-weight:700}
+.card{background:var(--card);padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,0.3);flex:1;display:flex;align-items:center;gap:12px;border:1px solid var(--border)}
+.card .num{font-size:20px;font-weight:700;color:var(--text)}
 .card .label{color:var(--muted);font-size:13px}
 
 .grid{display:flex;gap:18px;justify-content:center}
@@ -29,23 +29,29 @@ body{margin:0;font-family:Segoe UI,Helvetica,Arial;background:#f3f6fb;color:#222
 .col{width:100%;max-width:820px;display:flex;flex-direction:column;gap:20px}
 .main-col{width:720px}
 .col.side{width:520px}
-.panel{background:var(--card);border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(10,20,40,0.04)}
-.panel-title{font-weight:700;margin-bottom:8px}
-.panel-body{max-height:420px;overflow:auto}
+.panel{background:var(--card);border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,0.2);border:1px solid var(--border)}
+.panel-title{font-weight:700;margin-bottom:8px;color:var(--text)}
+.panel-body{max-height:420px;overflow:auto;color:var(--text)}
 
-.room-row, .booking-row{display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid #f1f3f6}
+.room-row, .booking-row{display:flex;justify-content:space-between;padding:10px;border-bottom:1px solid var(--border)}
 .room-row .left{display:flex;gap:8px;align-items:center}
-.room-row, .booking-row{display:flex;justify-content:space-between;padding:12px;border-bottom:1px solid #f1f3f6}
+.room-row, .booking-row{display:flex;justify-content:space-between;padding:12px;border-bottom:1px solid var(--border)}
 .room-row .left{display:flex;gap:10px;align-items:center}
 .badge{background:#eef6ff;color:var(--accent);padding:6px 8px;border-radius:8px;font-weight:700}
-.btn{padding:8px 10px;border-radius:6px;border:1px solid #ddd;background:#fff;cursor:pointer}
+.btn{padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer}
+.btn:hover{background:var(--accent)}
+
+.review-row{margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:8px}
 
 /* Button icons (simple emoji-based icons for lightweight UI) */
 .btn.refresh::before{content:'⟳';display:inline-block;margin-right:8px;font-size:14px}
 .btn.add-room::before{content:'➕';display:inline-block;margin-right:8px;font-size:14px}
+.btn.del::before{content:'🗑';display:inline-block;margin-right:8px;font-size:14px}
+.btn.edit::before{content:'✏';display:inline-block;margin-right:8px;font-size:14px}
+.btn.del-review::before{content:'🗑';display:inline-block;margin-right:8px;font-size:14px}
 
 /* Summary icons */
-.panel .panel-body .summary-item{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.panel .panel-body .summary-item{display:flex;align-items:center;gap:8px;margin-bottom:6px;color:var(--text)}
 .panel .panel-body .summary-item.rooms::before{content:'🏨';font-size:16px}
 .panel .panel-body .summary-item.bookings::before{content:'📅';font-size:16px}
 

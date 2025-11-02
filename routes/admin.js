@@ -4,6 +4,8 @@ const multer = require('multer');
 const path = require('path');
 const Room = require('../models/Room');
 const User = require('../models/User');
+const Booking = require('../models/Booking');
+const Review = require('../models/Review');
 const auth = require('../middleware/auth');
 const isAdmin = require('../middleware/isAdmin');
 
@@ -121,6 +123,36 @@ router.delete('/rooms/:id', auth, isAdmin, async (req, res) => {
     const room = await Room.findByIdAndDelete(req.params.id);
     if (!room) return res.status(404).json({ message: 'Room not found' });
     res.json({ message: 'Room deleted' });
+  } catch(e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+// Admin Routes for Booking Management
+router.get('/bookings', auth, isAdmin, async (req, res) => {
+  try {
+    const bookings = await Booking.find().populate('room user').sort('-createdAt');
+    res.json(bookings);
+  } catch(e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+// Admin Routes for Review Management
+router.get('/reviews', auth, isAdmin, async (req, res) => {
+  try {
+    const reviews = await Review.find().sort('-createdAt');
+    res.json(reviews);
+  } catch(e) {
+    res.status(500).json({ message: e.message });
+  }
+});
+
+router.delete('/reviews/:id', auth, isAdmin, async (req, res) => {
+  try {
+    const review = await Review.findByIdAndDelete(req.params.id);
+    if (!review) return res.status(404).json({ message: 'Review not found' });
+    res.json({ message: 'Review deleted' });
   } catch(e) {
     res.status(500).json({ message: e.message });
   }

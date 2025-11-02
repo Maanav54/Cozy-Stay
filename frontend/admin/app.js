@@ -101,8 +101,10 @@
 
   const statsEl = $('#stats');
   const summaryEl = $('#summary');
+  const bookedRoomsEl = $('#bookedRooms');
   const refreshBtn = $('#refreshBtn');
   const newRoomBtn = $('#newRoomBtn');
+  const newUserBtn = $('#newUserBtn');
 
   
   // Note: token input controls removed from header; token is managed via login page or auto-login
@@ -118,6 +120,19 @@
   const res = await fetch(API_BASE + '/admin/rooms', { method:'POST', headers: { 'Content-Type':'application/json', ...authHeaders() }, body: JSON.stringify({ number, type, price }) });
       if(!res.ok){ let txt=''; try{ const b=await res.json(); txt=b && (b.error||b.message) ? (b.error||b.message) : JSON.stringify(b); }catch(e){ txt=res.statusText } return alert('Create failed: '+txt); }
       alert('Room created'); fetchAll();
+    }catch(err){ alert('Error: '+err.message) }
+  });
+
+  newUserBtn.addEventListener('click', async ()=>{
+    const email = prompt('Email'); if(!email) return;
+    const password = prompt('Password'); if(!password) return;
+    const name = prompt('Name')||'New User';
+    const role = prompt('Role (user/admin)')||'user';
+    try{
+      if(!await ensureAuth()) return alert('You must be logged in to create a user.');
+      const res = await fetch(API_BASE + '/admin/users', { method:'POST', headers: { 'Content-Type':'application/json', ...authHeaders() }, body: JSON.stringify({ email, password, name, role }) });
+      if(!res.ok){ let txt=''; try{ const b=await res.json(); txt=b && (b.error||b.message) ? (b.error||b.message) : JSON.stringify(b); }catch(e){ txt=res.statusText } return alert('Create failed: '+txt); }
+      alert('User created');
     }catch(err){ alert('Error: '+err.message) }
   });
 
@@ -165,8 +180,9 @@
       }catch(e){ try{ const r3 = await fetch('http://localhost:3000/reviews'); if(r3.ok) reviews = await r3.json(); }catch(_){} }
 
       renderStats(rooms, bookings, reviews);
-  // renderArrivalDeparture function removed; bookings are accessible via Bookings view
+// renderArrivalDeparture function removed; bookings are accessible via Bookings view
       renderSummary(rooms, bookings);
+      renderBookedRooms(bookings);
     }catch(err){
       console.error(err);
       statsEl.innerHTML = '<div class="muted">Unable to load data. Check servers and token.</div>';
@@ -254,16 +270,71 @@
     }));
   }
 
+  // --- Users Manage view ---
+  function showUsersView(){
+    const content = document.createElement('div');
+    content.innerHTML = `
+      <div class="panel"><div class="panel-title">Users Manage</div>
+        <div class="panel-body" id="usersTable">Loading users...</div>
+      </div>`;
+    const main = document.querySelector('.grid');
+    main.parentNode.replaceChild(content, main);
+
+    (async ()=>{
+      try{
+        const res = await fetch(API_BASE + '/admin/users', { headers: { 'Content-Type':'application/json', ...authHeaders() } });
+        if(!res.ok) throw new Error('Failed to fetch users');
+        let data = await res.json();
+        if(!Array.isArray(data)) data = data ? [data] : [];
+        const el = document.getElementById('usersTable');
+        if(!data.length) return el.innerHTML = '<div class="muted">No users found</div>';
+        const rows = data.map(u=>`<div class="user-row"><div class="left"><strong>${escapeHtml(u.name||u.email||'User')}</strong><div class="muted">${escapeHtml(u.email||'')}</div></div><div>${escapeHtml(u.role||'user')} <button data-id="${u._id}" class="btn edit-user">Edit</button> <button data-id="${u._id}" class="btn del-user">Delete</button></div></div>`).join('');
+        el.innerHTML = rows;
+        el.querySelectorAll('button.del-user').forEach(b=>b.addEventListener('click', async (e)=>{
+          if(!confirm('Delete user?')) return;
+          const id = e.target.dataset.id;
+          try{
+            if(!await ensureAuth()) return alert('You must be logged in to delete a user.');
+            const dRes = await fetch(API_BASE + '/admin/users/' + id, { method: 'DELETE', headers:{ ...authHeaders(), 'Content-Type':'application/json' } });
+            if(!dRes.ok){ let txt=''; try{ const b=await dRes.json(); txt=b && (b.error||b.message) ? (b.error||b.message) : JSON.stringify(b);}catch(_){ txt=dRes.statusText } return alert('Delete failed: '+txt); }
+            alert('Deleted'); showUsersView();
+          }catch(err){ alert('Delete error: '+err.message) }
+        }));
+        el.querySelectorAll('button.edit-user').forEach(b=>b.addEventListener('click', async (e)=>{
+          const id = e.target.dataset.id;
+          const user = data.find(u=>u._id===id);
+          if(!user) return alert('User not found');
+          const name = prompt('Name', user.name||'');
+          const email = prompt('Email', user.email||'');
+          const role = prompt('Role (user/admin)', user.role||'user');
+          if(!name || !email) return alert('Name and email required');
+          try{
+            if(!await ensureAuth()) return alert('You must be logged in to update a user.');
+            const res = await fetch(API_BASE + '/admin/users/' + id, { method:'PUT', headers: { 'Content-Type':'application/json', ...authHeaders() }, body: JSON.stringify({ name, email, role }) });
+            if(!res.ok){ let txt=''; try{ const b=await res.json(); txt=b && (b.error||b.message) ? (b.error||b.message) : JSON.stringify(b);}catch(e){ txt=res.statusText } return alert('Update failed: '+txt); }
+            alert('Updated'); showUsersView();
+          }catch(err){ alert('Update error: '+err.message) }
+        }));
+      }catch(err){ const el = document.getElementById('usersTable'); el.innerText = 'Error: '+err.message }
+    })();
+  }
+
   // Wire navigation: Rooms Manage link in sidebar -> showRoomsView
   document.querySelectorAll('.sidebar nav a').forEach(a=>{
     if(a.textContent.trim().startsWith('Rooms')){
       a.addEventListener('click', (e)=>{ e.preventDefault(); showRoomsView(); });
+    }
+    if(a.textContent.trim().startsWith('Users')){
+      a.addEventListener('click', (e)=>{ e.preventDefault(); showUsersView(); });
     }
     if(a.textContent.trim().startsWith('Bookings')){
       a.addEventListener('click', (e)=>{ e.preventDefault(); showBookingsView(); });
     }
     if(a.textContent.trim().startsWith('Reviews')){
       a.addEventListener('click', (e)=>{ e.preventDefault(); showReviewsView(); });
+    }
+    if(a.textContent.trim().startsWith('Settings')){
+      a.addEventListener('click', (e)=>{ e.preventDefault(); showSettingsView(); });
     }
     if(a.textContent.trim().startsWith('Dashboard')){
       a.addEventListener('click', (e)=>{ e.preventDefault(); window.location.reload(); });
@@ -309,7 +380,35 @@
     `;
   }
 
-  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function renderBookedRooms(bookings){
+    if(!Array.isArray(bookings) || !bookings.length){
+      bookedRoomsEl.innerHTML = '<div class="muted">No booked rooms</div>';
+      return;
+    }
+    const rows = bookings.map(b=>`<div class="booking-row"><div class="left"><strong>${escapeHtml((b.room && (b.room.title||b.room.number))||b.room||'—')}</strong><div class="muted">Guest: ${escapeHtml(b.fullName||b.name||b.user||'Guest')}</div></div><div>${escapeHtml(String(b.totalPrice||b.total || ''))} <div class="muted">${escapeHtml((b.checkIn||b.arrival||'')+' → '+(b.checkOut||b.departure||''))}</div></div></div>`).join('');
+    bookedRoomsEl.innerHTML = rows;
+  }
+
+  // --- Settings view ---
+  function showSettingsView(){
+    const content = document.createElement('div');
+    content.innerHTML = `
+      <div class="panel"><div class="panel-title">Settings</div>
+        <div class="panel-body">
+          <p>Admin settings and configuration options.</p>
+          <button id="logoutBtn" class="btn">Logout</button>
+        </div>
+      </div>`;
+    const main = document.querySelector('.grid');
+    main.parentNode.replaceChild(content, main);
+
+    document.getElementById('logoutBtn').addEventListener('click', ()=>{
+      clearToken();
+      window.location.href = 'login.html';
+    });
+  }
+
+  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'<').replace(/>/g,'>').replace(/"/g,'"'); }
 
   // Initial fetch
   fetchAll();

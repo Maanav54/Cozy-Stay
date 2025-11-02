@@ -6,6 +6,7 @@ const protect = require('../middleware/protect');
 router.use(protect);
 
 router.get('/', controller.listUsers);
+router.post('/', controller.createUser);
 router.put('/:id', controller.updateUser);
 router.delete('/:id', controller.deleteUser);
 

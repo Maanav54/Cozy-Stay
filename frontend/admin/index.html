@@ -13,7 +13,7 @@
         <nav>
           <a class="active">Dashboard</a>
           <a href="#rooms">Rooms Manage.</a>
-          <!-- Guest Manage removed as requested -->
+          <a href="#users">Users Manage.</a>
           <a href="#bookings">Bookings</a>
           <a href="#reviews">Reviews</a>
           <a href="#settings">Settings</a>
@@ -43,7 +43,13 @@
               <div class="panel-body">
                 <button id="refreshBtn" class="btn refresh">Refresh</button>
                 <button id="newRoomBtn" class="btn add-room">+ Add Room</button>
+                <button id="newUserBtn" class="btn add-user">+ Add User</button>
               </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-title">Booked Rooms</div>
+              <div id="bookedRooms" class="panel-body">Loading...</div>
             </div>
 
             <div class="panel">
