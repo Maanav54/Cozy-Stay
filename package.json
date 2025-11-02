@@ -6,9 +6,10 @@
   "scripts": {
     "start": "node server.js",
     "dev": "concurrently \"npm run user\" \"npm run admin\"",
-    "user": "nodemon server-user/server.js",
+    "user": "nodemon server.js",
     "admin": "nodemon server-admin/server.js"
     ,"seed-admin": "node server-admin/scripts/seed-admin.js"
+    ,"seed-rooms": "node scripts/seed-rooms.js"
   },
   "dependencies": {
     "bcrypt": "^5.1.0",

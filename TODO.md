@@ -1,0 +1,10 @@
+- [x] Add hero section to booking page with title and description
+- [x] Remove filter section to show all room types without filtering
+- [x] Update renderBookingRooms() to display all rooms with prices and images
+- [x] Ensure all room types are visible for booking
+- [x] Test that all rooms are displayed correctly
+- [x] Start backend server (server.js) to enable room fetching API
+- [x] Modify booking modal in openBookingModal() to use check-in date and number of nights instead of check-out date
+- [x] Modify booking form in loadBooking() to use check-in date and number of nights
+- [x] Update form submission logic to calculate check-out date from check-in + nights
+- [x] Test booking functionality with new nights input

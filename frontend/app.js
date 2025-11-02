@@ -1,6 +1,10 @@
 // Frontend SPA - vanilla JS interacting with backend API
-const API = window.location.origin + '/api';
+const API = 'http://localhost:5000/api';
 const app = document.getElementById('app');
+
+function isValidObjectId(id){
+  return typeof id === 'string' && /^[0-9a-fA-F]{24}$/.test(id);
+}
 
 const state = { user: null, rooms: [] };
 
@@ -59,6 +63,8 @@ function bindNav(){
 }
 
 async function loadProfile(){
+  // ensure home background removed on profile page
+  try{ document.body.classList.remove('home-bg'); }catch(e){}
   const token = localStorage.getItem('token');
   if(!token){ openAuthModal(); return; }
   try{
@@ -86,37 +92,88 @@ async function loadProfile(){
 }
 
 async function loadHome(){
+  // enable full-page background for home
+  try{ document.body.classList.add('home-bg'); }catch(e){}
+  // Modern hero with background image, CTA and an events section. Rooms removed from the home page.
   app.innerHTML = `<section class="hero">
     <div class="hero-card">
-      <div class="eyebrow">Welcome to Sunrise Hotel</div>
-      <h1 class="title">Comfortable stays — best prices</h1>
-      <p class="sub">Choose from deluxe, super deluxe, normal or budget rooms. Animated UI with availability and easy bookings.</p>
+      <div class="eyebrow">Welcome to Cozy Stay</div>
+      <h1 class="title">Stay where comfort meets elegance</h1>
+      <p class="sub">Experience thoughtful service, modern amenities and a location close to the city's best attractions.</p>
+      <div style="margin-top:16px">
+        <button class="btn primary" id="view-rooms">View Rooms & Book</button>
+        <button class="btn" id="learn-more">Learn More</button>
+      </div>
     </div>
     <div class="hero-card">
-      <h3>Quick Info</h3>
-      <p>Contact: +91 90000 00000</p>
-      <p>Address: MG Road, City</p>
+      <h3>Today's Highlights</h3>
+      <ul style="margin:8px 0 0 0;padding-left:18px;color:var(--muted)">
+        <li>Complimentary breakfast for all bookings made this week</li>
+        <li>Free airport shuttle for suites (T&C apply)</li>
+        <li>Live music on Friday evenings at our rooftop lounge</li>
+      </ul>
     </div>
   </section>
-  <section>
-    <h2 style="margin-bottom:12px">Rooms</h2>
-    <div class="rooms-grid" id="rooms-grid"></div>
+
+  <section class="home-events" style="margin-top:20px">
+    <h2 style="margin-bottom:12px">Events & Offers</h2>
+    <div class="events-grid">
+      <div class="event-card">
+        <!-- use local rooftop image for Rooftop Jazz Nights -->
+        <img src="/images/rooftop.jpg" alt="Rooftop Jazz Nights" />
+        <h4>Rooftop Jazz Nights</h4>
+        <p class="muted">Every Friday — Live performers and signature cocktails.</p>
+      </div>
+      <div class="event-card">
+        <!-- breakfast now uses the rooftop photo to match the brief -->
+        <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=60&auto=format&fit=crop" alt="Breakfast" />
+        <h4>Breakfast Buffet Special</h4>
+        <p class="muted">Free for bookings this week — regional and continental options.</p>
+      </div>
+      <div class="event-card">
+        <img src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=800&q=60&auto=format&fit=crop" alt="Spa" />
+        <h4>Spa Weekend Packages</h4>
+        <p class="muted">Relaxing spa packages with in-room treatments available.</p>
+      </div>
+    </div>
   </section>`;
-  await fetchRooms();
-  renderRooms();
+
+  // Wire CTA to booking page
+  document.getElementById('view-rooms').onclick = (e)=>{ e.preventDefault(); loadBooking(); };
+  document.getElementById('learn-more').onclick = (e)=>{ e.preventDefault(); loadHotelInfo(); };
 }
 
 async function fetchRooms(){
+  // default sample rooms used when API is unreachable or returns no data
+  // default sample rooms used when API is unreachable or returns no data
+  // NOTE: these demo rooms intentionally do NOT include a MongoDB _id — attempting to POST bookings
+  // for them will be intercepted client-side to avoid ObjectId cast errors on the server.
+  const defaultRooms = [
+  { title: 'Budget Cozy Room', type: 'Below Average', price: 999, available: 5, total: 5, description: 'A compact room with basic amenities, great for short stays.', image: '/images/cozy.jpg' },
+    { title: 'Classic Standard Room', type: 'Normal', price: 1499, available: 8, total: 8, description: 'Comfortable room with queen bed and free Wi-Fi.', image: '/images/wifi.jpg' },
+    { title: 'Deluxe City View', type: 'Deluxe', price: 2499, available: 4, total: 4, description: 'Spacious room with city views and premium amenities.', image: '/images/deluxe.jpg' },
+    { title: 'Super Deluxe Suite', type: 'Super Deluxe', price: 3999, available: 2, total: 2, description: 'Large suite with separate living area and luxury features.', image: '/images/super.jpg' }
+  ];
+
   try{
     const res = await fetch(API + '/rooms');
     if (!res.ok) {
-      console.error('Failed to fetch rooms:', res.status, res.statusText);
+      console.warn('Failed to fetch rooms from API; using sample rooms:', res.status, res.statusText);
+      state.rooms = defaultRooms;
       return;
     }
-    state.rooms = await res.json();
-    console.log('Fetched rooms:', state.rooms);
+    const rooms = await res.json();
+    // if API returned no rooms, fall back to sample rooms so UI is always populated
+    if(!Array.isArray(rooms) || rooms.length === 0){
+      console.info('API returned no rooms; using sample rooms');
+      state.rooms = defaultRooms;
+    } else {
+      state.rooms = rooms;
+    }
+    console.log('Rooms loaded:', state.rooms);
   }catch(e){ 
-    console.error('Error fetching rooms:', e);
+    console.error('Error fetching rooms, falling back to sample rooms:', e);
+    state.rooms = defaultRooms;
   }
 }
 
@@ -133,12 +190,19 @@ function renderRooms(){
     // include any other types after
     state.rooms.filter(r => !order.includes(r.type)).forEach(r => byOrder.push(r));
 
+    if(byOrder.length === 0){
+      grid.innerHTML = '<p>No rooms available at the moment. Please check back later.</p>';
+      return;
+    }
+
     byOrder.forEach(r=>{
     const node = tmpl.content.cloneNode(true);
     // Set image for room
     const defaultImages = {
-      'Normal': '/images/normal.jpg',
-      'Below Average': '/images/below.jpg',
+      // Normal room uses a nicer Unsplash image for a more realistic look
+      'Normal': '/images/wifi.jpg',
+      // nicer photo for budget/below-average category
+      'Below Average': '/images/cozy.jpg',
       'Deluxe': '/images/deluxe.jpg',
       'Super Deluxe': '/images/super.jpg'
     };
@@ -154,9 +218,9 @@ function renderRooms(){
     node.querySelector('.room-desc').textContent = r.description || '';
     node.querySelector('.price').textContent = '₹ ' + (r.price || 0) + '/night';
     node.querySelector('.available').textContent = (typeof r.available === 'number' ? r.available : 0) + ' left';
-      const btn = node.querySelector('.book-btn');
-      // redirect to booking page with selected room
-      btn.onclick = ()=> loadBooking(r);
+  const btn = node.querySelector('.book-btn');
+  // navigate to booking page for the selected room (opens full booking form)
+  btn.onclick = ()=> loadBooking(r);
     grid.appendChild(node);
   });
 }
@@ -172,7 +236,7 @@ function openBookingModal(room){
     <h3>Book ${room.title}</h3>
     <form id="booking-form">
       <input type="date" id="checkIn" required />
-      <input type="date" id="checkOut" required />
+      <input type="number" id="nights" placeholder="Number of nights" min="1" value="1" required />
       <input type="number" id="guests" placeholder="Guests" min="1" value="1" />
       <div style="margin-top:8px">
         <button class="btn primary" type="submit">Confirm Booking</button>
@@ -183,9 +247,21 @@ function openBookingModal(room){
   document.getElementById('booking-form').onsubmit = async (e)=>{
     e.preventDefault();
     const checkIn = document.getElementById('checkIn').value;
-    const checkOut = document.getElementById('checkOut').value;
+    const nights = parseInt(document.getElementById('nights').value || '1');
     const guests = parseInt(document.getElementById('guests').value || '1');
+    // Calculate check-out date
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkInDate);
+    checkOutDate.setDate(checkInDate.getDate() + nights);
+    const checkOut = checkOutDate.toISOString().split('T')[0];
     const token = localStorage.getItem('token');
+    // For demo/sample rooms without a real MongoDB ObjectId, simulate booking locally and avoid server POST.
+    if(!isValidObjectId(room._id)){
+      alert('This is a demo room (not persisted in the database). Booking simulated locally — no backend booking was created. To enable real bookings, add rooms via the admin panel or seed the database.');
+      html.remove();
+      return;
+    }
+
     try{
       const res = await fetch(API + '/bookings', {
         method: 'POST',
@@ -290,7 +366,9 @@ async function submitAuth(e){
   }catch(e){ alert('Network error'); }
 }
 
-function loadBooking(room){
+async function loadBooking(room){
+  // remove home background when on booking pages
+  try{ document.body.classList.remove('home-bg'); }catch(e){}
   if(!state.user){
     // if not logged in, open auth modal; after login, user can click Book again
     openAuthModal();
@@ -305,7 +383,7 @@ function loadBooking(room){
         <form id="booking-form">
           <input type="hidden" id="roomId" value="${room._id}" />
           <label>Check-in<input type="date" id="checkIn" required /></label>
-          <label>Check-out<input type="date" id="checkOut" required /></label>
+          <label>Number of nights<input type="number" id="nights" placeholder="Number of nights" min="1" value="1" required /></label>
           <label>Guests<input type="number" id="guests" placeholder="Guests" min="1" value="1" /></label>
           <div style="margin-top:12px"><button class="btn primary" type="submit">Confirm Booking</button></div>
         </form>
@@ -315,9 +393,22 @@ function loadBooking(room){
     document.getElementById('booking-form').onsubmit = async (e)=>{
       e.preventDefault();
       const checkIn = document.getElementById('checkIn').value;
-      const checkOut = document.getElementById('checkOut').value;
+      const nights = parseInt(document.getElementById('nights').value || '1');
       const guests = parseInt(document.getElementById('guests').value || '1');
+      // Calculate check-out date
+      const checkInDate = new Date(checkIn);
+      const checkOutDate = new Date(checkInDate);
+      checkOutDate.setDate(checkInDate.getDate() + nights);
+      const checkOut = checkOutDate.toISOString().split('T')[0];
       const token = localStorage.getItem('token');
+      // If the room doesn't have a valid ObjectId, it's a demo/sample room — simulate booking locally.
+      if(!isValidObjectId(room._id)){
+        alert('This is a demo/sample room. Booking has been simulated locally — no backend booking was made. To enable real bookings, add rooms in the admin panel or seed the database.');
+        // redirect to bookings list (empty) or just return to booking list
+        loadBooking();
+        return;
+      }
+
       try{
         const res = await fetch(API + '/bookings', {
           method: 'POST',
@@ -338,9 +429,72 @@ function loadBooking(room){
     return;
   }
 
-  // No room provided: show user's bookings
-  app.innerHTML = `<section><h2>Your Bookings</h2><div id="my-bookings"></div></section>`;
-  loadMyBookings();
+  // No room provided: show available rooms for booking
+  app.innerHTML = `<section class="booking-hero">
+    <div class="hero-card">
+      <div class="eyebrow">Book Your Stay</div>
+      <h1 class="title">Find Your Perfect Room</h1>
+      <p class="sub">Browse our collection of rooms with various types and price ranges. All room types are available for booking.</p>
+    </div>
+  </section>
+
+  <section class="booking-rooms">
+    <div class="rooms-grid" id="booking-rooms-grid"></div>
+  </section>`;
+
+  // Fetch rooms if not loaded
+  if(state.rooms.length === 0) await fetchRooms();
+
+  // Initial render
+  renderBookingRooms();
+}
+
+async function renderBookingRooms(){
+  const grid = document.getElementById('booking-rooms-grid');
+  grid.innerHTML = '';
+
+  // desired order: Below Average, Normal, Deluxe, Super Deluxe
+  const order = ['Below Average', 'Normal', 'Deluxe', 'Super Deluxe'];
+  const byOrder = [];
+  order.forEach(type => {
+    state.rooms.filter(r => r.type === type).forEach(r => byOrder.push(r));
+  });
+  // include any other types after
+  state.rooms.filter(r => !order.includes(r.type)).forEach(r => byOrder.push(r));
+
+  if(byOrder.length === 0){
+    grid.innerHTML = '<p>No rooms available at the moment. Please check back later.</p>';
+    return;
+  }
+
+  const tmpl = document.getElementById('room-card');
+  byOrder.forEach(r=>{
+    const node = tmpl.content.cloneNode(true);
+    // Set image for room
+    const defaultImages = {
+      'Normal': 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200&q=80&auto=format&fit=crop',
+      // nicer photo for budget/below-average category
+      'Below Average': 'https://images.unsplash.com/photo-1505691723518-36a7b6a5f0b4?w=1200&q=80&auto=format&fit=crop',
+      'Deluxe': '/images/deluxe.jpg',
+      'Super Deluxe': '/images/super.jpg'
+    };
+    const imgUrl = r.image || defaultImages[r.type];
+    const imgEl = node.querySelector('.room-img');
+    imgEl.src = imgUrl;
+    // Set same image for all sizes since we're using local images
+    const small = imgUrl;
+    const medium = imgUrl;
+    imgEl.srcset = `${small} 400w, ${medium} 800w, ${imgUrl} 1200w`;
+    node.querySelector('.room-title').textContent = r.title;
+    node.querySelector('.room-type').textContent = r.type;
+    node.querySelector('.room-desc').textContent = r.description || '';
+    node.querySelector('.price').textContent = '₹ ' + (r.price || 0) + '/night';
+    node.querySelector('.available').textContent = (typeof r.available === 'number' ? r.available : 0) + ' left';
+    const btn = node.querySelector('.book-btn');
+    // navigate to booking page for the selected room (opens full booking form)
+    btn.onclick = ()=> loadBooking(r);
+    grid.appendChild(node);
+  });
 }
 
 async function loadMyBookings(){
@@ -361,13 +515,30 @@ async function loadMyBookings(){
 }
 
 function loadHotelInfo(){
-  app.innerHTML = `<section><h2>About the Hotel</h2>
-  <p>Sunrise Hotel offers comfortable accommodation with great service, free Wi-Fi, breakfast options and friendly staff.</p>
-  <ul><li>Check-in: 12:00 PM</li><li>Check-out: 11:00 AM</li><li>Parking: Available</li></ul>
+  // remove home background for other pages
+  try{ document.body.classList.remove('home-bg'); }catch(e){}
+
+  app.innerHTML = `<section>
+    <h2>About the Hotel</h2>
+    <div class="hotel-images">
+      <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=400&fit=crop" alt="Hotel Exterior" style="width:100%;max-width:800px;margin-bottom:16px;border-radius:12px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-bottom:24px;">
+        <img src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop" alt="Hotel Lobby" style="border-radius:8px;">
+        <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400&h=300&fit=crop" alt="Hotel Room" style="border-radius:8px;">
+        <img src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=400&h=300&fit=crop" alt="Hotel Restaurant" style="border-radius:8px;">
+      </div>
+    </div>
+    <p>Cozy Stay offers comfortable accommodation with great service, free Wi-Fi, breakfast options and friendly staff.</p>
+    <ul><li>Check-in: 12:00 PM</li><li>Check-out: 11:00 AM</li><li>Parking: Available</li></ul>
+    <h3>Location</h3>
+    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3888.001!2d77.5946!3d12.9716!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bae1670c9b44e6d%3A0x73b6b3d4e4c8c8b!2sMG%20Road%2C%20Bengaluru%2C%20Karnataka!5e0!3m2!1sen!2sin!4v1690000000000!5m2!1sen!2sin" width="100%" height="300" style="border:0;border-radius:8px;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
   </section>`;
 }
 
 function loadContact(){
+  // remove home background for other pages
+  try{ document.body.classList.remove('home-bg'); }catch(e){}
+
   app.innerHTML = `<section><h2>Contact Us</h2>
   <p>Email: contact@sunrisehotel.example</p>
   <p>Phone: +91 90000 00000</p>
@@ -385,6 +556,8 @@ function loadContact(){
 }
 
 async function loadAdmin(){
+  // remove home background for admin pages
+  try{ document.body.classList.remove('home-bg'); }catch(e){}
   if(!state.user?.isAdmin) return loadHome();
   
   try {
@@ -659,6 +832,8 @@ async function loadAdmin(){
 
 // Reviews page: list reviews and allow logged-in users to post
 async function loadReviews(){
+  // remove home background when viewing reviews
+  try{ document.body.classList.remove('home-bg'); }catch(e){}
   try{
     const res = await fetch(API + '/reviews');
     if(!res.ok) throw new Error('Failed to load reviews');
